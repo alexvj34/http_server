@@ -14,18 +14,15 @@ public class HttpServer {
     public HttpServer(int port) {
         this.port = port;
         this.dispatcher = new Dispatcher();
-        this.executorService = Executors.newFixedThreadPool(10);  // Пул из 10 потоков
+        this.executorService = Executors.newFixedThreadPool(10);
     }
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Сервер запущен на порту: " + port);
-            // Цикл, который будет принимать новые соединения
             while (true) {
                 try {
-                    // Принять новое соединение
                     Socket socket = serverSocket.accept();
-                    // Для каждого соединения создаем отдельный поток
                     executorService.submit(() -> handleRequest(socket));
                 } catch (IOException e) {
                     System.out.println("Произошла ошибка: " + e.getMessage());
@@ -37,7 +34,7 @@ public class HttpServer {
     }
 
     private void handleRequest(Socket socket) {
-        try (socket) {  // Автоматическое закрытие сокета после выполнения работы
+        try (socket) {
             byte[] buffer = new byte[8192];
             int n = socket.getInputStream().read(buffer);
             String rawRequest = new String(buffer, 0, n);
