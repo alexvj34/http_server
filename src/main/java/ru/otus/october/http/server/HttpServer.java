@@ -5,11 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpServer {
     private int port;
     private final Dispatcher dispatcher;
     private final ExecutorService executorService;
+    private static final Logger logger = LoggerFactory.getLogger(HttpServer.class); // Логгер теперь статический
 
     public HttpServer(int port) {
         this.port = port;
@@ -19,17 +22,17 @@ public class HttpServer {
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Сервер запущен на порту: " + port);
+            logger.info("Сервер запущен на порту: " + port);
             while (true) {
                 try {
                     Socket socket = serverSocket.accept();
                     executorService.submit(() -> handleRequest(socket));
                 } catch (IOException e) {
-                    System.out.println("Произошла ошибка: " + e.getMessage());
+                    logger.error("Произошла ошибка при принятии соединения: ", e);
                 }
             }
         } catch (IOException e) {
-            System.out.println("Произошла ошибка: " + e.getMessage());
+            logger.error("Произошла ошибка при запуске сервера: ", e);
         }
     }
 
@@ -42,7 +45,7 @@ public class HttpServer {
             request.info(true);
             dispatcher.execute(request, socket.getOutputStream());
         } catch (IOException e) {
-            System.out.println("Произошла ошибка: " + e.getMessage());
+            logger.error("Произошла ошибка при обработке запроса: ", e);
         }
     }
 }

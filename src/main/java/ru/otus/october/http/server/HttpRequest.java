@@ -8,7 +8,15 @@ public class HttpRequest {
     private HttpMethod method;
     private String uri;
     private Map<String, String> parameters;
+    private Map<String, String> headers;  // Поле для заголовков
     private Exception exception;
+
+    public HttpRequest(String rawRequest) {
+        this.rawRequest = rawRequest;
+        this.parameters = new HashMap<>();  // Инициализация параметров
+        this.headers = new HashMap<>();  // Инициализация заголовков
+        this.parse();  // Разбор запроса
+    }
 
     public Exception getException() {
         return exception;
@@ -22,9 +30,8 @@ public class HttpRequest {
         return uri;
     }
 
-    public HttpRequest(String rawRequest) {
-        this.rawRequest = rawRequest;
-        this.parse();
+    public HttpMethod getMethod() {
+        return method;
     }
 
     public String getParameter(String key) {
@@ -35,12 +42,18 @@ public class HttpRequest {
         return parameters.containsKey(key);
     }
 
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
     private void parse() {
+        String[] lines = rawRequest.split("\r\n");  // Разделяем запрос на строки
         int startIndex = rawRequest.indexOf(' ');
         int endIndex = rawRequest.indexOf(' ', startIndex + 1);
         uri = rawRequest.substring(startIndex + 1, endIndex);
-        method = HttpMethod.valueOf(rawRequest.substring(0, startIndex));
-        parameters = new HashMap<>();
+        method = HttpMethod.valueOf(rawRequest.substring(0, startIndex));  // Парсим метод
+
+        // Разбираем параметры запроса
         if (uri.contains("?")) {
             String[] elements = uri.split("[?]");
             uri = elements[0];
@@ -50,14 +63,26 @@ public class HttpRequest {
                 parameters.put(keyValue[0], keyValue[1]);
             }
         }
+
+        // Парсим заголовки
+        int i = 1;
+        while (i < lines.length && !lines[i].isEmpty()) {  // Обрабатываем строки до пустой
+            String[] headerParts = lines[i].split(": ");
+            if (headerParts.length == 2) {
+                headers.put(headerParts[0], headerParts[1]);  // Добавляем в заголовки
+            }
+            i++;
+        }
     }
 
+    // Метод для вывода информации о запросе
     public void info(boolean debug) {
         if (debug) {
-            System.out.println(rawRequest);
+            System.out.println(rawRequest);  // Выводим сам запрос для дебага
         }
         System.out.println("Method: " + method);
         System.out.println("URI: " + uri);
         System.out.println("Parameters: " + parameters);
+        System.out.println("Headers: " + headers);  // Выводим заголовки
     }
 }
